@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אתגר קריאה יומי - כיתה ב'</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Hebrew readability -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Varela+Round&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Rubik', 'Varela Round', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #e0e7ff 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 10px 15px rgba(0, 0, 0, 0.04);
+        }
+
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .animate-bounce-gentle {
+            animation: gentle-bounce 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+        }
+
+        .pulse-glow-btn {
+            animation: pulse-glow 2.5s infinite;
+        }
+
+        /* High Visibility Text formatting */
+        .sentence-display {
+            line-height: 1.85;
+            letter-spacing: 0.5px;
+            word-spacing: 2px;
+        }
+
+        /* Custom gender buttons */
+        .gender-option {
+            transition: all 0.25s ease;
+        }
+        .gender-option.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #2563eb;
+            transform: scale(1.03);
+            box-shadow: 0 8px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .modal-fade {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between p-4 md:p-8 select-none">
+
+    <header class="max-w-4xl w-full mx-auto text-center mb-4">
+        <div class="inline-flex items-center gap-3 bg-white/90 px-6 py-2.5 rounded-full shadow-md border border-white">
+            <span class="text-2xl animate-bounce-gentle">📖</span>
+            <h1 class="text-xl md:text-2xl font-black text-slate-800 tracking-wide">
+                אתגר קריאה יומי - כיתה ב'
+            </h1>
+            <span class="text-2xl animate-bounce-gentle">⭐</span>
+        </div>
+    </header>
+
+    <main class="max-w-3xl w-full mx-auto my-auto">
+        <div class="glass-card rounded-3xl p-6 md:p-10 text-center relative overflow-hidden transition-all duration-300">
+            
+            <!-- Daily Readers Counter Badge -->
+            <div class="absolute top-4 left-4 bg-amber-100 border border-amber-300 text-amber-800 text-xs md:text-sm font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-medal text-amber-500"></i>
+                <span>משתתפים היום: <strong id="daily-count" class="text-amber-900 text-base">0</strong></span>
+            </div>
+
+            <div id="screen-setup" class="space-y-6 pt-4">
+                <div class="inline-block p-4 bg-blue-50 rounded-full text-blue-600 mb-2">
+                    <i class="fa-solid fa-graduation-cap text-4xl"></i>
+                </div>
+                
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-black text-slate-800 mb-2">מי מתמודד/ת באתגר הבוקר?</h2>
+                    <p class="text-slate-600 font-semibold">רשמו את שם התלמיד/ה ובחרו מגדר כדי להתחיל</p>
+                </div>
+
+                <!-- Input Student Name -->
+                <div class="max-w-md mx-auto">
+                    <label for="student-name-input" class="block text-right text-sm font-bold text-slate-700 mb-2 mr-1">
+                        שם התלמיד/ה:
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="student-name-input" placeholder="הקלד/י שם כאן..." 
+                            class="w-full text-center text-xl font-bold py-3.5 px-4 rounded-2xl border-2 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                            onkeypress="handleEnterKey(event)" autofocus>
+                        <i class="fa-solid fa-user text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- Gender Selection Buttons -->
+                <div class="max-w-md mx-auto">
+                    <label class="block text-right text-sm font-bold text-slate-700 mb-2 mr-1">
+                        מגדר (עבור ברכת הניצחון):
+                    </label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button type="button" id="btn-gender-boy" onclick="setGender('boy')" 
+                            class="gender-option active flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-lg cursor-pointer">
+                            <span class="text-2xl">👦</span>
+                            <span>בן</span>
+                        </button>
+                        <button type="button" id="btn-gender-girl" onclick="setGender('girl')" 
+                            class="gender-option flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-lg cursor-pointer">
+                            <span class="text-2xl">👧</span>
+                            <span>בת</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="max-w-md mx-auto pt-2">
+                    <label for="level-filter-select" class="block text-right text-sm font-bold text-slate-700 mb-2 mr-1">
+                        דרגת קושי מועדפת:
+                    </label>
+                    <select id="level-filter-select" class="w-full bg-white border-2 border-slate-300 rounded-2xl py-3 px-4 text-slate-800 font-bold text-base outline-none focus:border-blue-500 cursor-pointer">
+                        <option value="all">🎲 כל הרמות (אקראי)</option>
+                        <option value="1">🟢 רמה 1: קלה וקצרה</option>
+                        <option value="2">🔵 רמה 2: בינונית</option>
+                        <option value="3">🔴 רמה 3: מורכבת ומאתגרת</option>
+                    </select>
+                </div>
+
+                <!-- Start Challenge Button -->
+                <div class="pt-4">
+                    <button onclick="startChallenge()" 
+                        class="pulse-glow-btn bg-blue-600 hover:bg-blue-700 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 active:translate-y-0 w-full max-w-md cursor-pointer">
+                        <i class="fa-solid fa-play ml-2"></i> להתחלת האתגר!
+                    </button>
+                </div>
+            </div>
+
+            <div id="screen-challenge" class="hidden space-y-6">
+                <!-- Top Header Info -->
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-slate-400 block">מתמודד/ת כעת:</span>
+                        <span id="current-student-display" class="text-2xl font-black text-blue-600"></span>
+                    </div>
+
+                    <!-- Level Badge Display -->
+                    <div id="level-badge" class="px-4 py-2 rounded-2xl text-sm font-black flex items-center gap-2 border shadow-sm">
+                        <!-- Dynamic Level Content -->
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-2">
+                        <span class="text-xs font-bold text-slate-500">
+                            <i class="fa-solid fa-eye ml-1"></i> קרא/י את המשפט בקול רם:
+                        </span>
+                        <!-- Font Size Adjustment Buttons -->
+                        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="adjustFontSize(-0.2)" title="הקטן גופו" class="w-8 h-8 rounded-lg bg-white text-slate-700 font-bold hover:bg-slate-200 flex items-center justify-center shadow-xs">
+                                <i class="fa-solid fa-minus text-xs"></i>
+                            </button>
+                            <span class="text-xs font-bold px-2 text-slate-600">גודל כתב</span>
+                            <button onclick="adjustFontSize(0.2)" title="הגדל גופו" class="w-8 h-8 rounded-lg bg-white text-slate-700 font-bold hover:bg-slate-200 flex items-center justify-center shadow-xs">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sentence Box -->
+                    <div class="bg-gradient-to-br from-slate-50 to-white border-3 border-slate-300 rounded-3xl p-6 md:p-10 min-h-[220px] flex items-center justify-center shadow-inner relative">
+                        <p id="sentence-text" class="sentence-display text-slate-900 font-bold text-center transition-all duration-200" style="font-size: 2.3rem;">
+                            <!-- Sentence goes here -->
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <button onclick="drawSentence()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border-2 border-slate-300 font-bold py-3.5 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 text-lg cursor-pointer">
+                        <i class="fa-solid fa-dice text-blue-500"></i> החלף משפט
+                    </button>
+
+                    <button onclick="completeChallenge()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-xl transform hover:-translate-y-0.5 cursor-pointer">
+                        <i class="fa-solid fa-circle-check"></i> הצלחתי! קראתי!
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none modal-fade">
+        <div class="bg-white rounded-3xl p-8 md:p-10 max-w-md w-full text-center shadow-2xl border-4 border-amber-300 relative transform scale-90 transition-transform duration-300" id="modal-card">
+            
+            <!-- Big Trophy Animation -->
+            <div class="w-28 h-28 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-6xl shadow-inner border-2 border-amber-200 animate-bounce-gentle">
+                🏆
+            </div>
+
+            <h3 class="text-3xl font-black text-emerald-600 mb-1">כל הכבוד!</h3>
+            
+            <p id="winner-text" class="text-xl font-black text-slate-800 mb-6 leading-relaxed">
+                <!-- Dynamically generated congratulation message -->
+            </p>
+
+            <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-6">
+                <p class="text-sm font-bold text-amber-900">
+                    ✨ ביצעת את אתגר הקריאה בהצלחה מרובה! ✨
+                </p>
+            </div>
+
+            <!-- Next Student Button -->
+            <button onclick="nextStudent()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xl py-4 px-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <span>לתלמיד/ה הבא/ה</span>
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SENTENCES_DATABASE = [
+            // Level 1: Green (Short & Easy)
+            { id: 101, level: 1, text: "הַכֶּלֶב הַחֲמוּד רָץ בַּדֶּשֶׁא." },
+            { id: 102, level: 1, text: "הַשֶּׁמֶשׁ הַצְהֻבָּה מְאִירָה בַּשָּׁמַיִם." },
+            { id: 103, level: 1, text: "דָּנִי אֹוהֵב לֶאֱכֹל תַּפּוּחַ יָרֹוק." },
+            { id: 104, level: 1, text: "הַיְלָדִים מְשַׂחֲקִים בַּכַּדּוּר הָאָדֹום." },
+            { id: 105, level: 1, text: "אִמָּא קָרְאָה לִי סִפּוּר יָפֶה." },
+            { id: 106, level: 1, text: "הַחֲתוּלָה הַקְּטַנָּה יְשֵׁנָה עַל הַסַּפָּה." },
+            { id: 107, level: 1, text: "שִׁירִי הָלְכָה לְבֵית הַסֵּפֶר בַּבֹּקֶר." },
+            { id: 108, level: 1, text: "רָנִי בָּנָה מִגְדָּל מִקֻּבְּיוֹת." },
+            { id: 109, level: 1, text: "הַצִּפּוֹר שָׁרָה שִׁיר מָתוֹק עַל הָעֵץ." },
+            { id: 110, level: 1, text: "הַיֶּלֶד הַשָּׂמֵחַ שָׁתָה כּוֹס מַיִם." },
+
+            // Level 2: Blue (Medium)
+            { id: 201, level: 2, text: "יֹונָתָן לָבַשׁ אֶת הַמְּעִיל כִּי הָיָה קַר בַּחוּץ." },
+            { id: 202, level: 2, text: "הַיְלָדִים אָכְלוּ אֲרוּחַת בֹּקֶר טְעִימָה לִפְנֵי הַלִּמּוּדִים." },
+            { id: 203, level: 2, text: "מַאיָה מָצְאָה פַּרְפַּר צִבְעוֹנִי בְּגַן הַפְּרָחִים." },
+            { id: 204, level: 2, text: "בַּהַפְסָקָה יָצָאנוּ לֶחָצֵר וְשִׂחַקְנוּ עִם כָּל הַחֲבֵרִים." },
+            { id: 205, level: 2, text: "הַמוֹרָה קָרְאָה סִפּוּר מְעַנְיֵן עַל בַּעֲלֵי חַיִּים." },
+            { id: 206, level: 2, text: "גִּילִי אוֹהֶבֶת לְצַיֵּר פְּרָחִים וּפַרְפָּרִים בַּמַּחְבֶּרֶת." },
+            { id: 207, level: 2, text: "הַכֶּלֶב הַקָּטָן נָבַח כְּשֶׁהוּא רָאָה אֶת הַחֲתוּלָה." },
+            { id: 208, level: 2, text: "הָאָבִיב הִגִּיעַ וְכָל הַפְּרָחִים בַּגַּן מַתְחִילִים לִפְרֹחַ." },
+            { id: 209, level: 2, text: "הַיְלָדִים בַּכִּתָּה יָשְׁבוּ בְּשֶׁקֶט וְהִקְשִׁיבוּ לַהֶסְבֵּר." },
+            { id: 210, level: 2, text: "אָבָּא קָנָה לָנוּ כַּדּוּר חָדָשׁ לַמִּשְׂחָק בַּחָצֵר." },
+
+            // Level 3: Red (Challenging)
+            { id: 301, level: 3, text: "כְּשֶׁהַפַּעֲמוֹן נִשְׁמַע בְּבֵית הַסֵּפֶר, כָּל הַתַּלְמִידִים נִכְנְסוּ בְּשֶׁקֶט אֶל הַכִּתָּה." },
+            { id: 302, level: 3, text: "עֲנָנִים אֲפוֹרִים כִּסּוּ אֶת הַשָּׁמַיִם, וּבְקָרוֹב מְאֹד יַתְחִיל לָרֶדֶת גֶּשֶׁם חָזָק." },
+            { id: 303, level: 3, text: "עֹמֶר מָצָא סֵפֶר מַפְתִּיעַ בַּסִּפְרִיָּה וְהֶחְלִיט לִקְרֹא אוֹתוֹ בִּזְמַן הַהַפְסָקָה." },
+            { id: 304, level: 3, text: "הַצַּב הָאִטִּי הִמְשִׁיךְ לִצְעֹד בְּסַבְלָנוּת וְהִגִּיעַ לַסִּיּוּם לִפְנֵי הָאַרְנָב." },
+            { id: 305, level: 3, text: "נֹעָה וְאִיתַי אָסְפוּ עָלִים צִבְעוֹנִיִּים בַּגַּן כְּדֵי לְהָכִין יְצִירָה יָפָה." },
+            { id: 306, level: 3, text: "רֹנִי לָמַד לִרְכֹּב עַל אוֹפַנַּיִם לְלא גַּלְגַּלֵּי עֵזֶר וְהָיָה גֶּאָה בְּעַצְמוֹ." },
+            { id: 307, level: 3, text: "הַיְלָדִים שָׁרוּ שִׁירִים שְׂמֵחִים וְרָקְדוּ בְּיַחַד בִּמְסִבַּת יוֹם הַהֻלֶּדֶת." },
+            { id: 308, level: 3, text: "כְּשֶׁאִמָּא פָּתְחָה אֶת הַחַלּוֹן, נִכְנַס אֲוָויר קָרִיר וְנָעִים אֶל הַחֶדֶר." },
+            { id: 309, level: 3, text: "בִּשְׁעַת הַסִּפּוּר, כָּל הַכִּתָּה הִקְשִׁיבָה בְּסַקְרָנוּת לַסּוֹף הַמַּפְתִּיעַ." },
+            { id: 310, level: 3, text: "אֱלָעָד סִיֵּם אֶת הַמְּשִׁימָה בִּמְהִירוּת וְעָזַר לַחָבֵר שֶׁלּוֹ לִפְתֹּר אֶת הַשְּׁאֵלָה." }
+        ];
+
+        let currentStudent = {
+            name: '',
+            gender: 'boy'
+        };
+        let currentSentence = null;
+        let dailyCount = 0;
+        let currentFontSize = 2.3; // rem
+
+        function setGender(gender) {
+            currentStudent.gender = gender;
+            document.getElementById('btn-gender-boy').classList.toggle('active', gender === 'boy');
+            document.getElementById('btn-gender-girl').classList.toggle('active', gender === 'girl');
+        }
+
+        function handleEnterKey(event) {
+            if (event.key === 'Enter') {
+                startChallenge();
+            }
+        }
+
+        function startChallenge() {
+            const nameInput = document.getElementById('student-name-input').value.trim();
+            if (!nameInput) {
+                const inputEl = document.getElementById('student-name-input');
+                inputEl.classList.add('border-red-500', 'bg-red-50');
+                setTimeout(() => {
+                    inputEl.classList.remove('border-red-500', 'bg-red-50');
+                }, 1500);
+                return;
+            }
+
+            currentStudent.name = nameInput;
+            document.getElementById('current-student-display').innerText = currentStudent.name;
+
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-challenge').classList.remove('hidden');
+
+            drawSentence();
+        }
+
+        function drawSentence() {
+            const filterValue = document.getElementById('level-filter-select').value;
+            let availableSentences = SENTENCES_DATABASE;
+
+            if (filterValue !== 'all') {
+                const targetLevel = parseInt(filterValue, 10);
+                availableSentences = SENTENCES_DATABASE.filter(s => s.level === targetLevel);
+            }
+
+            let selected;
+            do {
+                const randomIndex = Math.floor(Math.random() * availableSentences.length);
+                selected = availableSentences[randomIndex];
+            } while (availableSentences.length > 1 && currentSentence && selected.id === currentSentence.id);
+
+            currentSentence = selected;
+
+            const sentenceEl = document.getElementById('sentence-text');
+            sentenceEl.style.fontSize = `${currentFontSize}rem`;
+            sentenceEl.innerText = currentSentence.text;
+
+            const badgeEl = document.getElementById('level-badge');
+            if (currentSentence.level === 1) {
+                badgeEl.className = "px-4 py-2 rounded-2xl text-sm font-black flex items-center gap-2 border shadow-sm bg-emerald-100 text-emerald-800 border-emerald-300";
+                badgeEl.innerHTML = `<span class="w-3 h-3 rounded-full bg-emerald-500"></span> <span>רמה 1: קלה וקצרה</span>`;
+            } else if (currentSentence.level === 2) {
+                badgeEl.className = "px-4 py-2 rounded-2xl text-sm font-black flex items-center gap-2 border shadow-sm bg-blue-100 text-blue-800 border-blue-300";
+                badgeEl.innerHTML = `<span class="w-3 h-3 rounded-full bg-blue-500"></span> <span>רמה 2: בינונית</span>`;
+            } else {
+                badgeEl.className = "px-4 py-2 rounded-2xl text-sm font-black flex items-center gap-2 border shadow-sm bg-rose-100 text-rose-800 border-rose-300";
+                badgeEl.innerHTML = `<span class="w-3 h-3 rounded-full bg-rose-500"></span> <span>רמה 3: מאתגרת</span>`;
+            }
+        }
+
+        function adjustFontSize(delta) {
+            currentFontSize = Math.max(1.5, Math.min(3.5, currentFontSize + delta));
+            const sentenceEl = document.getElementById('sentence-text');
+            sentenceEl.style.fontSize = `${currentFontSize}rem`;
+        }
+
+        function completeChallenge() {
+            dailyCount++;
+            document.getElementById('daily-count').innerText = dailyCount;
+
+            const winnerTextEl = document.getElementById('winner-text');
+            if (currentStudent.gender === 'boy') {
+                winnerTextEl.innerText = `${currentStudent.name}, אתה אלוף הקריאה! 🏆`;
+            } else {
+                winnerTextEl.innerText = `${currentStudent.name}, את אלופת הקריאה! 🏆`;
+            }
+
+            const modal = document.getElementById('success-modal');
+            const modalCard = document.getElementById('modal-card');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-90');
+            modalCard.classList.add('scale-100');
+
+            triggerConfetti();
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6, x: 0.2 }
+                });
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6, x: 0.8 }
+                });
+            }
+        }
+
+        function nextStudent() {
+            const modal = document.getElementById('success-modal');
+            const modalCard = document.getElementById('modal-card');
+
+            modalCard.classList.remove('scale-100');
+            modalCard.classList.add('scale-90');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+
+            document.getElementById('student-name-input').value = '';
+            
+            document.getElementById('screen-challenge').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('student-name-input').focus();
+            }, 300);
+        }
+    </script>
+</body>
+</html>
